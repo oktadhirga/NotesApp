@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.aya.mynotesapp">
+    package="com.example.dicodingnotesapp">
 
-    <permission android:name="com.example.aya.mynotesapp.READ_DATABASE" android:protectionLevel="normal" />
-    <permission android:name="com.example.aya.mynotesapp.WRITE_DATABASE" android:protectionLevel="normal" />
+    <uses-permission android:name="com.example.aya.mynotesapp.READ_DATABASE" />
+    <uses-permission android:name="com.example.aya.mynotesapp.WRITE_DATABASE" />
 
     <application
         android:allowBackup="true"
@@ -19,13 +19,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".FormAddUpdateActivity"></activity>
-        <provider
-            android:authorities="com.example.aya.mynotesapp"
-            android:name=".provider.NoteProvider"
-            android:exported="true"
-            android:readPermission="com.example.aya.mynotesapp.READ_DATABASE"
-            android:writePermission="com.example.aya.mynotesapp.WRITE_DATABASE" />
+        <activity android:name=".FormActivity"></activity>
     </application>
 
 </manifest>

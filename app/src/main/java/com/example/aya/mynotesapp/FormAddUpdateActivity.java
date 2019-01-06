@@ -1,10 +1,12 @@
 package com.example.aya.mynotesapp;
 
+import android.content.ContentValues;
 import android.content.DialogInterface;
-import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,6 +20,11 @@ import com.example.aya.mynotesapp.entity.Note;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import static com.example.aya.mynotesapp.db.DatabaseContract.CONTENT_URI;
+import static com.example.aya.mynotesapp.db.DatabaseContract.NoteColumns.DATE;
+import static com.example.aya.mynotesapp.db.DatabaseContract.NoteColumns.DESCRIPTION;
+import static com.example.aya.mynotesapp.db.DatabaseContract.NoteColumns.TITLE;
 
 public class FormAddUpdateActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -35,7 +42,6 @@ public class FormAddUpdateActivity extends AppCompatActivity implements View.OnC
     public static int RESULT_DELETE = 301;
 
     private Note note;
-    private int position;
     private NoteHelper noteHelper;
 
     @Override
@@ -51,16 +57,23 @@ public class FormAddUpdateActivity extends AppCompatActivity implements View.OnC
         noteHelper = new NoteHelper(this);
         noteHelper.open();
 
-        note = getIntent().getParcelableExtra(EXTRA_NOTE);
-        if (note != null) {
-            position = getIntent().getIntExtra(EXTRA_POSITION, 0);
-            isEdit = true;
+        Uri uri = getIntent().getData();
+
+        if (uri != null) {
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+
+            if (cursor != null) {
+                if (cursor.moveToFirst()) note = new Note(cursor);
+                cursor.close();
+            }
         }
 
         String actionBarTitle = null;
         String btnTitle = null;
 
-        if (isEdit) {
+        if (note != null) {
+            isEdit = true;
+
             actionBarTitle = "Ubah";
             btnTitle = "Update";
             edtTitle.setText(note.getTitle());
@@ -99,23 +112,18 @@ public class FormAddUpdateActivity extends AppCompatActivity implements View.OnC
             }
 
             if (!isEmpty) {
-                Note newNote = new Note();
-                newNote.setTitle(title);
-                newNote.setDescription(description);
-
-                Intent intent = new Intent();
+                ContentValues values = new ContentValues();
+                values.put(TITLE, title);
+                values.put(DESCRIPTION, description);
 
                 if (isEdit) {
-                    newNote.setDate(note.getDate());
-                    newNote.setId(note.getId());
-                    noteHelper.update(newNote);
 
-                    intent.putExtra(EXTRA_POSITION, position);
-                    setResult(RESULT_UPDATE, intent);
+                    getContentResolver().update(getIntent().getData(), values, null, null);
+                    setResult(RESULT_UPDATE);
                     finish();
                 } else {
-                    newNote.setDate(getCurrentDate());
-                    noteHelper.insert(newNote);
+                    values.put(DATE, getCurrentDate());
+                    getContentResolver().insert(CONTENT_URI, values);
 
                     setResult(RESULT_ADD);
                     finish();
@@ -175,10 +183,8 @@ public class FormAddUpdateActivity extends AppCompatActivity implements View.OnC
                         if (isDialogClose) {
                             finish();
                         } else {
-                            noteHelper.delete(note.getId());
-                            Intent intent = new Intent();
-                            intent.putExtra(EXTRA_POSITION, position);
-                            setResult(RESULT_DELETE, intent);
+                            getContentResolver().delete(getIntent().getData(), null, null);
+                            setResult(RESULT_DELETE, null);
                             finish();
                         }
                     }

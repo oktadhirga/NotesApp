@@ -1,4 +1,4 @@
-package com.example.aya.mynotesapp.db;
+package com.example.dicodingnotesapp.db;
 
 import android.database.Cursor;
 import android.net.Uri;

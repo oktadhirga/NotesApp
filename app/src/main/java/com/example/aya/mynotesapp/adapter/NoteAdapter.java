@@ -2,6 +2,8 @@ package com.example.aya.mynotesapp.adapter;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -15,22 +17,18 @@ import com.example.aya.mynotesapp.FormAddUpdateActivity;
 import com.example.aya.mynotesapp.R;
 import com.example.aya.mynotesapp.entity.Note;
 
-import java.util.LinkedList;
+import static com.example.aya.mynotesapp.db.DatabaseContract.CONTENT_URI;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
 
-    private LinkedList<Note> listNote;
+    private Cursor listNote;
     private Activity activity;
 
     public NoteAdapter(Activity activity) {
         this.activity = activity;
     }
 
-    public LinkedList<Note> getListNote() {
-        return listNote;
-    }
-
-    public void setListNote(LinkedList<Note> listNote) {
+    public void setListNote(Cursor listNote) {
         this.listNote = listNote;
     }
 
@@ -43,32 +41,41 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
-        holder.tvTitle.setText(getListNote().get(position).getTitle());
-        holder.tvDescription.setText(getListNote().get(position).getDescription());
-        holder.tvDate.setText(getListNote().get(position).getDate());
+        final Note note = getItem(position);
+        holder.tvTitle.setText(note.getTitle());
+        holder.tvDescription.setText(note.getDescription());
+        holder.tvDate.setText(note.getDate());
         holder.cvNote.setOnClickListener(new CustomOnItemClickListener(position, new CustomOnItemClickListener.OnItemClickCallBack() {
             @Override
             public void onItemClicked(View view, int position) {
                 Intent intent = new Intent(activity, FormAddUpdateActivity.class);
-                intent.putExtra(FormAddUpdateActivity.EXTRA_POSITION, position);
-                intent.putExtra(FormAddUpdateActivity.EXTRA_NOTE, getListNote().get(position));
+                Uri uri = Uri.parse(CONTENT_URI + "/" + note.getId());
+                intent.setData(uri);
                 activity.startActivityForResult(intent, FormAddUpdateActivity.REQUEST_UPDATE);
 
             }
         }));
     }
 
-    @Override
-    public int getItemCount() {
-        return getListNote().size();
+    private Note getItem(int position) {
+        if (!listNote.moveToPosition(position)) {
+            throw new IllegalStateException("Position Invalid");
+        }
+        return new Note(listNote);
     }
 
-    public class NoteViewHolder extends RecyclerView.ViewHolder {
+    @Override
+    public int getItemCount() {
+        if (listNote == null) return 0;
+        return listNote.getCount();
+    }
+
+    class NoteViewHolder extends RecyclerView.ViewHolder {
 
         TextView tvTitle, tvDate, tvDescription;
         CardView cvNote;
 
-        public NoteViewHolder(@NonNull View itemView) {
+        NoteViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tv_item_title);
             tvDate = itemView.findViewById(R.id.tv_item_date);
